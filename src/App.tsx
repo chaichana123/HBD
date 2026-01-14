@@ -423,7 +423,7 @@ function GamesGate({ onDone, pop }: { onDone: VoidFn; pop: (n: number) => void }
           <div className="badge">🕹️ ก่อนเข้า…ต้องผ่าน 3 เกมน่ารัก ๆ</div>
 
           <h1 className="title">
-            Welcome <span className="name">{CONFIG.name}</span> 💖
+            เข้ามาดูละหย๋อ <span className="name">{CONFIG.name}</span> 💖
           </h1>
 
           <p className="sub">ผ่านครบแล้วค่อยเข้าไปดูเซอร์ไพรส์ใหญ่ 🎁</p>

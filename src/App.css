@@ -347,3 +347,9 @@ body{
 }
 
 .gameMeta{ margin-top:10px; color: var(--muted); font-size:13px; }
+
+@media (max-width: 441px){
+  .wrap {
+    width: 440px;
+  }
+}
