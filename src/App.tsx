@@ -21,7 +21,7 @@ const CONFIG = {
     "รักแกที่สุดเลย MY BEV 🤍",
   ],
   coupons: [
-    { title: "กินของอร่อย 1 มื้อ (เธอเลือก!)", emoji: "🍜" },
+    { title: "กินของอร่อย 1 มื้อ (แกเลือก!)", emoji: "🍜" },
     { title: "กอดแน่น ๆ 10 นาที", emoji: "🤗" },
     { title: "ซื้อของให้ 1 อย่าง (อย่าแพงนร้า)", emoji: "🛍" },
     { title: "นวดให้ 10 นาที", emoji: "💆" },
@@ -606,6 +606,7 @@ function SurprisePage({ pop }: { pop: (n: number) => void }) {
                 <div className="giftHead">💝 ของขวัญคือ…</div>
                 <div className="giftBody">
                   วันนี้แกขออะไรข้าได้ 1 อย่างเลยนะ 🎀<br />
+                  (ยกเว้นขอให้ข้าไปจากนะ 😋)
                 </div>
                 <button
                   className="btn ghost"
