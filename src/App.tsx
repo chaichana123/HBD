@@ -4,20 +4,19 @@ import "./app.css";
 /** ====== แก้ตรงนี้ ====== */
 const CONFIG = {
   name: "เบเบ",
-  subtitle:
-    "วันนี้ขอให้โลกใจดีกับแกเป็นพิเศษเลยนะ ✨",
+  subtitle: "วันนี้ขอให้โลกใจดีกับแกเป็นพิเศษเลยนะ ✨",
   messageLines: [
     "ถึงคนฉ๋วย(สวย)ของข้า 💗",
     "",
     "สุขสันต์วันเกิดนะ!",
     "ขอบคุณที่อยู่ด้วยกันในทุกวัน ทั้งวันที่ดีและวันที่แย่",
-    "เราภูมิใจในตัวแกมาก ๆ และอยากให้แกรู้ว่า…",
-    "แกคือคนที่ทำให้โลกของเราน่ารักขึ้นจริง ๆ ✨",
+    "ข้าภูมิใจในตัวแกมาก ๆ และอยากให้แกรู้ว่า…",
+    "แกคือคนที่ทำให้โลกของข้าน่ารักขึ้นจริง ๆ ✨",
     "",
     "ขอให้ปีนี้เป็นปีที่แกยิ้มบ่อย ๆ",
     "ได้ทำในสิ่งที่อยากทำ มีงานเข้ามาเยอะ (มาเลี้ยงข้า)",
     "ได้พักผ่อนแบบเต็มที่ ตื่นมาสดใสเจอข้าทุกเช้า",
-    "แล้วก็…ขอให้มีเราอยู่ข้าง ๆ แบบนี้ไปนาน ๆ นะ 🥺💞",
+    "แล้วก็…ขอให้มีข้าอยู่ข้าง ๆ แบบนี้ไปนาน ๆ นะ 🥺💞",
     "",
     "รักแกที่สุดเลย MY BEV 🤍",
   ],
@@ -39,15 +38,19 @@ const CONFIG = {
 };
 /** ====================== */
 
-function useTyping(text, start, speedMs = 14) {
-  const [value, setValue] = useState("");
+type VoidFn = () => void;
+
+function useTyping(text: string, start: boolean, speedMs: number = 14) {
+  const [value, setValue] = useState<string>("");
+
   useEffect(() => {
     if (!start) return;
+
     let i = 0;
     let raf = 0;
     let last = performance.now();
 
-    const tick = (t) => {
+    const tick = (t: number) => {
       if (t - last >= speedMs) {
         last = t;
         i += 1;
@@ -55,6 +58,7 @@ function useTyping(text, start, speedMs = 14) {
       }
       if (i < text.length) raf = requestAnimationFrame(tick);
     };
+
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [text, start, speedMs]);
@@ -62,10 +66,22 @@ function useTyping(text, start, speedMs = 14) {
   return value;
 }
 
-function ConfettiCanvas({ fireKey }) {
-  const canvasRef = useRef(null);
-  const piecesRef = useRef([]);
-  const animRef = useRef(0);
+/** ===== Confetti Types ===== */
+type ConfettiPiece = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  s: number;
+  r: number;
+  vr: number;
+  a: number;
+};
+
+function ConfettiCanvas({ fireKey }: { fireKey: number }) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const piecesRef = useRef<ConfettiPiece[]>([]);
+  const animRef = useRef<number>(0);
 
   const resize = () => {
     const c = canvasRef.current;
@@ -82,9 +98,13 @@ function ConfettiCanvas({ fireKey }) {
 
   useEffect(() => {
     if (!fireKey) return;
+
     const c = canvasRef.current;
     if (!c) return;
+
     const ctx = c.getContext("2d");
+    if (!ctx) return;
+
     const W = c.width;
     const H = c.height;
 
@@ -102,7 +122,13 @@ function ConfettiCanvas({ fireKey }) {
       });
     }
 
-    const roundRect = (x, y, w, h, r) => {
+    const roundRect = (
+      x: number,
+      y: number,
+      w: number,
+      h: number,
+      r: number
+    ) => {
       const min = Math.min(w, h);
       const rr = Math.min(r, min / 2);
       ctx.beginPath();
@@ -117,7 +143,10 @@ function ConfettiCanvas({ fireKey }) {
     const animate = () => {
       const c2 = canvasRef.current;
       if (!c2) return;
+
       const ctx2 = c2.getContext("2d");
+      if (!ctx2) return;
+
       const W2 = c2.width;
       const H2 = c2.height;
 
@@ -135,10 +164,12 @@ function ConfettiCanvas({ fireKey }) {
         ctx2.globalAlpha = Math.max(0, p.a);
         ctx2.translate(p.x, p.y);
         ctx2.rotate(p.r);
+
         const hue = (p.x / W2) * 360;
         ctx2.fillStyle = `hsl(${hue}, 90%, 65%)`;
         roundRect(-p.s / 2, -p.s / 2, p.s, p.s * 0.6, 3);
         ctx2.fill();
+
         ctx2.restore();
       }
 
@@ -152,42 +183,43 @@ function ConfettiCanvas({ fireKey }) {
 
     cancelAnimationFrame(animRef.current);
     animRef.current = requestAnimationFrame(animate);
+
     return () => cancelAnimationFrame(animRef.current);
   }, [fireKey]);
 
   return <canvas className="confetti" ref={canvasRef} />;
 }
 
-/** ====== เกม 1: จับคู่ emoji (Memory 4 คู่) ====== */
-function GameMatch({ onWin }) {
+/** ====== เกม 1: จับคู่ emoji ====== */
+type MatchCard = { id: string; v: string };
+
+function GameMatch({ onWin }: { onWin: VoidFn }) {
   const base = useMemo(() => ["💗", "🎂", "🐻", "🍓"], []);
-  const deck = useMemo(() => {
-    const arr = [...base, ...base]
+  const deck: MatchCard[] = useMemo(() => {
+    return [...base, ...base]
       .map((v, i) => ({ id: `${v}-${i}`, v }))
       .sort(() => Math.random() - 0.5);
-    return arr;
   }, [base]);
 
-  const [open, setOpen] = useState([]); // ids
-  const [matched, setMatched] = useState(() => new Set());
-  const [moves, setMoves] = useState(0);
+  const [open, setOpen] = useState<string[]>([]);
+  const [matched, setMatched] = useState<Set<string>>(() => new Set());
+  const [moves, setMoves] = useState<number>(0);
 
   useEffect(() => {
-    if (matched.size === deck.length) {
-      onWin();
-    }
+    if (matched.size === deck.length) onWin();
   }, [matched, deck.length, onWin]);
 
-  const canFlip = (id) =>
+  const canFlip = (id: string) =>
     !matched.has(id) && !open.includes(id) && open.length < 2;
 
-  const flip = (id) => {
+  const flip = (id: string) => {
     if (!canFlip(id)) return;
     setOpen((prev) => [...prev, id]);
   };
 
   useEffect(() => {
     if (open.length !== 2) return;
+
     setMoves((m) => m + 1);
 
     const [a, b] = open;
@@ -196,11 +228,16 @@ function GameMatch({ onWin }) {
     if (!A || !B) return;
 
     if (A.v === B.v) {
-      setMatched((prev) => new Set(prev).add(a).add(b));
+      setMatched((prev) => {
+        const next = new Set(prev);
+        next.add(a);
+        next.add(b);
+        return next;
+      });
       setOpen([]);
     } else {
-      const t = setTimeout(() => setOpen([]), 600);
-      return () => clearTimeout(t);
+      const t = window.setTimeout(() => setOpen([]), 600);
+      return () => window.clearTimeout(t);
     }
   }, [open, deck]);
 
@@ -218,21 +255,23 @@ function GameMatch({ onWin }) {
               className={`matchTile ${isOpen ? "open" : ""}`}
               onClick={() => flip(c.id)}
               aria-label="tile"
+              type="button"
             >
               <span>{isOpen ? c.v : "?"}</span>
             </button>
           );
         })}
       </div>
+
       <div className="gameMeta">จำนวนครั้งที่ลอง: {moves}</div>
     </div>
   );
 }
 
-/** ====== เกม 2: กดหัวใจให้ครบ 15 ครั้ง (น่ารัก/ง่าย) ====== */
-function GameHearts({ onWin }) {
+/** ====== เกม 2: กดหัวใจให้ครบ 15 ครั้ง ====== */
+function GameHearts({ onWin }: { onWin: VoidFn }) {
   const target = 15;
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState<number>(0);
 
   useEffect(() => {
     if (count >= target) onWin();
@@ -256,6 +295,7 @@ function GameHearts({ onWin }) {
         className="btn primary"
         onClick={() => setCount((c) => c + 1)}
         style={{ marginTop: 12 }}
+        type="button"
       >
         กดหัวใจ 💗 ({count}/{target})
       </button>
@@ -263,13 +303,14 @@ function GameHearts({ onWin }) {
   );
 }
 
-/** ====== เกม 3: Quiz เล็ก ๆ 3 ข้อ ====== */
-function GameQuiz({ onWin }) {
-  // เปลี่ยนคำถาม/คำตอบได้เอง
-  const questions = useMemo(
+/** ====== เกม 3: Quiz ====== */
+type QuizQ = { q: string; options: string[]; answer: string };
+
+function GameQuiz({ onWin }: { onWin: VoidFn }) {
+  const questions: QuizQ[] = useMemo(
     () => [
       {
-        q: "คำที่เราบอกแกบ่อยที่สุดคือ?",
+        q: "คำที่ข้าบอกแกบ่อยที่สุดคือ?",
         options: ["ขอบคุณ", "รักนะ", "ไปกินไรดี", "นอนก่อนนะ"],
         answer: "รักนะ",
       },
@@ -287,25 +328,26 @@ function GameQuiz({ onWin }) {
     []
   );
 
-  const [idx, setIdx] = useState(0);
-  const [ok, setOk] = useState(0);
-  const [selected, setSelected] = useState(null);
+  const [idx, setIdx] = useState<number>(0);
+  const [ok, setOk] = useState<number>(0);
+  const [selected, setSelected] = useState<string | null>(null);
 
   const current = questions[idx];
 
-  const choose = (opt) => {
+  const choose = (opt: string) => {
     if (selected) return;
+
     setSelected(opt);
     const correct = opt === current.answer;
     if (correct) setOk((x) => x + 1);
 
-    setTimeout(() => {
+    window.setTimeout(() => {
       const next = idx + 1;
+
       if (next >= questions.length) {
-        // ผ่านถ้าตอบถูกอย่างน้อย 2/3
-        if (correct ? ok + 1 : ok >= 2) onWin();
+        const finalOk = correct ? ok + 1 : ok;
+        if (finalOk >= 2) onWin();
         else {
-          // รีเซ็ตให้ลองใหม่
           setIdx(0);
           setOk(0);
         }
@@ -327,10 +369,12 @@ function GameQuiz({ onWin }) {
         <div className="quizQ">
           ข้อ {idx + 1}/{questions.length}: {current.q}
         </div>
+
         <div className="quizOpts">
           {current.options.map((opt) => {
-            const isCorrect = selected && opt === current.answer;
+            const isCorrect = selected !== null && opt === current.answer;
             const isWrong = selected === opt && opt !== current.answer;
+
             return (
               <button
                 key={opt}
@@ -338,6 +382,7 @@ function GameQuiz({ onWin }) {
                   isWrong ? "bad" : ""
                 }`}
                 onClick={() => choose(opt)}
+                type="button"
               >
                 {opt}
               </button>
@@ -352,12 +397,16 @@ function GameQuiz({ onWin }) {
 }
 
 /** ====== หน้าเล่นเกมรวม (ต้องผ่านครบ 3) ====== */
-function GamesGate({ onDone, pop }) {
-  const [done, setDone] = useState([false, false, false]);
+function GamesGate({ onDone, pop }: { onDone: VoidFn; pop: (n: number) => void }) {
+  const [done, setDone] = useState<[boolean, boolean, boolean]>([
+    false,
+    false,
+    false,
+  ]);
 
-  const mark = (i) => {
+  const mark = (i: 0 | 1 | 2) => {
     setDone((prev) => {
-      const next = [...prev];
+      const next: [boolean, boolean, boolean] = [...prev] as any;
       next[i] = true;
       return next;
     });
@@ -372,12 +421,12 @@ function GamesGate({ onDone, pop }) {
         <section className="hero">
           <div className="sparkles" />
           <div className="badge">🕹️ ก่อนเข้า…ต้องผ่าน 3 เกมน่ารัก ๆ</div>
+
           <h1 className="title">
             Welcome <span className="name">{CONFIG.name}</span> 💖
           </h1>
-          <p className="sub">
-            ผ่านครบแล้วค่อยเข้าไปดูเซอร์ไพรส์ใหญ่ 🎁 (เล่นง่ายมาก!)
-          </p>
+
+          <p className="sub">ผ่านครบแล้วค่อยเข้าไปดูเซอร์ไพรส์ใหญ่ 🎁</p>
 
           <div className="progressRow">
             {done.map((d, i) => (
@@ -392,7 +441,7 @@ function GamesGate({ onDone, pop }) {
               className="btn primary"
               disabled={!all}
               onClick={onDone}
-              title={!all ? "ผ่านให้ครบก่อนน้า" : "ไปหน้าเซอร์ไพรส์!"}
+              type="button"
             >
               {all ? "เข้าไปดูเซอร์ไพรส์ 🎁" : "ผ่านให้ครบก่อนน้า 💗"}
             </button>
@@ -433,21 +482,21 @@ function GamesGate({ onDone, pop }) {
   );
 }
 
-/** ====== หน้าเซอร์ไพรส์ (เหมือนเดิม) ====== */
-function SurprisePage({ pop }) {
-  const [started, setStarted] = useState(false);
-  const [claimed, setClaimed] = useState(() => new Set());
-  const [giftOpen, setGiftOpen] = useState(false);
+/** ====== หน้าเซอร์ไพรส์ ====== */
+function SurprisePage({ pop }: { pop: (n: number) => void }) {
+  const [started, setStarted] = useState<boolean>(false);
+  const [claimed, setClaimed] = useState<Set<number>>(() => new Set());
+  const [giftOpen, setGiftOpen] = useState<boolean>(false);
 
   const fullMessage = useMemo(() => {
     const lines = [...CONFIG.messageLines];
-    lines[0] = `ถึง ${CONFIG.name} ของเรา 💗`;
+    lines[0] = `ถึงคนฉ๋วย(สวย) ของข้า 💗`;
     return lines.join("\n");
   }, []);
 
   const typed = useTyping(fullMessage, started, 14);
 
-  const claimCoupon = (idx) => {
+  const claimCoupon = (idx: number) => {
     setClaimed((prev) => {
       const next = new Set(prev);
       next.add(idx);
@@ -484,6 +533,7 @@ function SurprisePage({ pop }) {
                 }
               }}
               disabled={started}
+              type="button"
             >
               {started ? "กำลังพิมพ์ให้… ✍️" : "เริ่มเซอร์ไพรส์ 🎁"}
             </button>
@@ -498,7 +548,9 @@ function SurprisePage({ pop }) {
           <section className="card">
             <h2>💗 ข้อความถึงอ้วม</h2>
             <div className="typing">{typed}</div>
-            <div className="mini">ปล. ข้อความจะค่อย ๆ โผล่เหมือนเราพิมพ์ให้จริง ๆ 🥺</div>
+            <div className="mini">
+              ปล. ข้อความจะค่อย ๆ โผล่เหมือนเราพิมพ์ให้จริง ๆ 🥺
+            </div>
           </section>
 
           <section className="card">
@@ -516,6 +568,7 @@ function SurprisePage({ pop }) {
                       className="pill"
                       disabled={isClaimed}
                       onClick={() => claimCoupon(idx)}
+                      type="button"
                     >
                       {isClaimed ? "รับแล้ว ✅" : "รับคูปอง"}
                     </button>
@@ -529,9 +582,6 @@ function SurprisePage({ pop }) {
 
         <section className="card" id="memories">
           <h2>📸 ความทรงจำของเรา</h2>
-          {/* <div className="mini">
-            ใส่รูปเองได้: วางรูปใน <b>public/photos</b> แล้วตั้งชื่อ <b>1.jpg</b>, <b>2.jpg</b> …
-          </div> */}
 
           <div className="gallery">
             {CONFIG.photos.map((p, idx) => (
@@ -545,7 +595,7 @@ function SurprisePage({ pop }) {
               <small>กดปุ่มนี้แล้วมีเซอร์ไพรส์เล็ก ๆ ให้ยิ้มหน่อย</small>
             </div>
 
-            <button className="btn primary" onClick={openGift}>
+            <button className="btn primary" onClick={openGift} type="button">
               เปิดของขวัญ 💝
             </button>
           </div>
@@ -555,9 +605,13 @@ function SurprisePage({ pop }) {
               <div className="giftBox">
                 <div className="giftHead">💝 ของขวัญคือ…</div>
                 <div className="giftBody">
-                  วันนี้แกขออะไรเราได้ 1 อย่างเลยนะ 🎀<br />
+                  วันนี้แกขออะไรข้าได้ 1 อย่างเลยนะ 🎀<br />
                 </div>
-                <button className="btn ghost" onClick={() => setGiftOpen(false)}>
+                <button
+                  className="btn ghost"
+                  onClick={() => setGiftOpen(false)}
+                  type="button"
+                >
                   ปิดหน้าต่าง
                 </button>
               </div>
@@ -565,16 +619,14 @@ function SurprisePage({ pop }) {
           )}
         </section>
 
-        <footer className="footer">
-          ทำด้วยความรัก 💖 | ตั้งใจทำเพื่ออะอ้วมคนเดียว
-        </footer>
+        <footer className="footer">ทำด้วยความรัก 💖 | ตั้งใจทำเพื่ออะอ้วมคนเดียว</footer>
       </div>
     </div>
   );
 }
 
-function Photo({ src, label }) {
-  const [ok, setOk] = useState(true);
+function Photo({ src, label }: { src: string; label: string }) {
+  const [ok, setOk] = useState<boolean>(true);
   return (
     <div className="shot">
       {ok ? (
@@ -588,10 +640,10 @@ function Photo({ src, label }) {
 }
 
 export default function App() {
-  const [stage, setStage] = useState("games"); // games | surprise
-  const [fire, setFire] = useState(0);
+  const [stage, setStage] = useState<"games" | "surprise">("games");
+  const [fire, setFire] = useState<number>(0);
 
-  const pop = (n) => {
+  const pop = (n: number) => {
     setFire(n);
     setTimeout(() => setFire(0), 50);
   };
