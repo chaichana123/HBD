@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import "./app.css";
+import "./App.css";
 
 /** ====== แก้ตรงนี้ ====== */
 const CONFIG = {
